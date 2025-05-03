@@ -9,10 +9,15 @@
 
 <GenericList MyList="Categories">
     <Body>
+        <Pagination CurrentPage="currentPage"
+                    TotalPages="totalPages"
+                    SelectedPage="SelectedPageAsync" />
+
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Categoría</th>
+                    <th style="width:140px"></th>
                     <th></th>
                 </tr>
             </thead>

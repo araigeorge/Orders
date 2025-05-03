@@ -9,6 +9,9 @@ namespace Orders.Frontend.Pages.Countries
     public partial class CountryDetails
     {
         private Country? country;
+        private List<State>? states;
+        private int currentPage = 1; 
+        private int totalPages;
 
         [Inject] private NavigationManager NavigationManager { get; set; } = null!;
         [Inject] private SweetAlertService SweetAlertService { get; set; } = null!;
@@ -21,25 +24,63 @@ namespace Orders.Frontend.Pages.Countries
             await LoadAsync();
         }
 
-        private async Task LoadAsync()
+        private async Task SelectedPageAsync(int page) 
+        { 
+            currentPage = page; 
+            await LoadAsync(page); 
+        }
+        private async Task LoadAsync(int page = 1) 
         {
-            var responseHttp = await Repository.GetAsync<Country>($"/api/countries/{CountryId}");
+            var ok = await LoadCountryAsync(); 
+            if (ok) 
+            { 
+                ok = await LoadStatesAsync(page);
+                if (ok) 
+                { 
+                    await LoadPagesAsync(); 
+                } 
+            } 
+        }
+        private async Task LoadPagesAsync() 
+        { 
+            var responseHttp = await Repository.GetAsync<int>($"api/states/totalPages?id={CountryId}"); 
+            if (responseHttp.Error) 
+            { 
+                var message = await responseHttp.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return; 
+            } 
+            totalPages = responseHttp.Response; 
+        }
+        private async Task<bool> LoadStatesAsync(int page) 
+        { 
+            var responseHttp = await Repository.GetAsync<List<State>>($"api/states?id={CountryId}&page={page}"); 
+            if (responseHttp.Error) 
+            { 
+                var message = await responseHttp.GetErrorMessageAsync(); 
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error); 
+                return false; 
+            } 
+            states = responseHttp.Response;
+            return true; 
+        }
+        private async Task<bool> LoadCountryAsync()
+        {
+            var responseHttp = await Repository.GetAsync<Country>($"/api/countries/{CountryId}"); 
             if (responseHttp.Error)
             {
                 if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                 {
                     NavigationManager.NavigateTo("/countries");
-                    return;
+                    return false;
                 }
-
-                var message = await responseHttp.GetErrorMessageAsync();
+                var message = await responseHttp.GetErrorMessageAsync(); 
                 await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
-                return;
+                return false;
             }
-
-            country = responseHttp.Response;
+            country = responseHttp.Response; 
+            return true;
         }
-
         private async Task DeleteAsync(State state)
         {
             var result = await SweetAlertService.FireAsync(new SweetAlertOptions

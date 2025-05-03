@@ -4,10 +4,16 @@ using Orders.Frontend.Repositories;
 using Orders.Shared.Entities;
 using System.Net;
 
+
+
+
 namespace Orders.Frontend.Pages.Countries
 {
     public partial class CountriesIndex
     {
+        private int currentPage = 1; 
+        private int totalPages;
+        
         [Inject] private IRepository Repository { get; set; } = null!;
         [Inject] private SweetAlertService SweetAlertService { get; set; } = null!;
         [Inject] private NavigationManager NavigationManager { get; set; } = null!;
@@ -18,16 +24,41 @@ namespace Orders.Frontend.Pages.Countries
         {
             await LoadAsync();
         }
-        private async Task LoadAsync()
-        {
-            var responseHttp = await Repository.GetAsync<List<Country>>("api/countries");
-            if (responseHttp.Error)
-            {
+        private async Task SelectedPageAsync(int page) 
+        { 
+            currentPage = page; 
+            await LoadAsync(page); 
+        }
+        private async Task LoadAsync(int page = 1) 
+        { 
+            var ok = await LoadListAsync(page); 
+            if (ok) 
+            { 
+                await LoadPagesAsync(); 
+            } 
+        }
+        private async Task<bool> LoadListAsync(int page) 
+        { 
+            var responseHttp = await Repository.GetAsync<List<Country>>($"api/countries?page={page}"); 
+            if (responseHttp.Error) 
+            { 
                 var message = await responseHttp.GetErrorMessageAsync();
-                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
-                return;
-            }
-            Countries = responseHttp.Response;
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error); 
+                return false; 
+            } 
+            Countries = responseHttp.Response; 
+            return true; 
+        }
+        private async Task LoadPagesAsync() 
+        { 
+            var responseHttp = await Repository.GetAsync<int>("api/countries/totalPages"); 
+            if (responseHttp.Error) 
+            { 
+                var message = await responseHttp.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error); 
+                return; 
+            } 
+            totalPages = responseHttp.Response; 
         }
 
         private async Task DeleteAsync(Country country)
@@ -68,6 +99,17 @@ namespace Orders.Frontend.Pages.Countries
                 Timer = 3000
             });
             await toast.FireAsync(icon: SweetAlertIcon.Success, message: "Registro borrado con éxito.");
+        }
+        private async Task LoadAsync()
+        {
+            var responseHttp = await Repository.GetAsync<List<Country>>("api/countries");
+            if (responseHttp.Error)
+            {
+                var message = await responseHttp.GetErrorMessageAsync();
+                await SweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+                return;
+            }
+            Countries = responseHttp.Response;
         }
     }
 }
