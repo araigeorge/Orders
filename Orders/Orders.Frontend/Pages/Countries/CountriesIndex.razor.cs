@@ -4,9 +4,6 @@ using Orders.Frontend.Repositories;
 using Orders.Shared.Entities;
 using System.Net;
 
-
-
-
 namespace Orders.Frontend.Pages.Countries
 {
     public partial class CountriesIndex
@@ -17,6 +14,10 @@ namespace Orders.Frontend.Pages.Countries
         [Inject] private IRepository Repository { get; set; } = null!;
         [Inject] private SweetAlertService SweetAlertService { get; set; } = null!;
         [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+        [Parameter, SupplyParameterFromQuery] public string Page { get; set; } = string.Empty;
+        [Parameter, SupplyParameterFromQuery] public string Filter { get; set; } = string.Empty;
+
 
         public List<Country>? Countries { get; set; }
 
@@ -29,17 +30,30 @@ namespace Orders.Frontend.Pages.Countries
             currentPage = page; 
             await LoadAsync(page); 
         }
+
         private async Task LoadAsync(int page = 1) 
-        { 
+        {
+            if (!string.IsNullOrWhiteSpace(Page)) 
+            { 
+                page = Convert.ToInt32(Page);
+            }
+
             var ok = await LoadListAsync(page); 
             if (ok) 
             { 
                 await LoadPagesAsync(); 
             } 
         }
+
         private async Task<bool> LoadListAsync(int page) 
-        { 
-            var responseHttp = await Repository.GetAsync<List<Country>>($"api/countries?page={page}"); 
+        {
+            var url = $"api/countries?page={page}";
+            if (!string.IsNullOrEmpty(Filter)) 
+            { 
+                url += $"&filter={Filter}"; 
+            }
+
+            var responseHttp = await Repository.GetAsync<List<Country>>(url); 
             if (responseHttp.Error) 
             { 
                 var message = await responseHttp.GetErrorMessageAsync();
@@ -49,9 +63,16 @@ namespace Orders.Frontend.Pages.Countries
             Countries = responseHttp.Response; 
             return true; 
         }
+
         private async Task LoadPagesAsync() 
-        { 
-            var responseHttp = await Repository.GetAsync<int>("api/countries/totalPages"); 
+        {
+            var url = "api/countries/totalPages"; 
+            if (!string.IsNullOrEmpty(Filter))
+            { 
+                url += $"?filter={Filter}";
+            }
+
+            var responseHttp = await Repository.GetAsync<int>(url); 
             if (responseHttp.Error) 
             { 
                 var message = await responseHttp.GetErrorMessageAsync();
@@ -60,7 +81,17 @@ namespace Orders.Frontend.Pages.Countries
             } 
             totalPages = responseHttp.Response; 
         }
-
+        private async Task CleanFilterAsync() 
+        { 
+            Filter = string.Empty;
+            await ApplyFilterAsync(); 
+        }
+        private async Task ApplyFilterAsync()
+        { 
+            int page = 1; 
+            await LoadAsync(page);
+            await SelectedPageAsync(page); 
+        }
         private async Task DeleteAsync(Country country)
         {
             var result = await SweetAlertService.FireAsync(new SweetAlertOptions
