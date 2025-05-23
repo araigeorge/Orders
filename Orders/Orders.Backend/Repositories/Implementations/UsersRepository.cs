@@ -21,11 +21,13 @@ namespace Orders.Backend.Repositories.Implementations
             _roleManager = roleManager;
             _signInManager = signInManager;
         }
+
         public async Task<SignInResult> LoginAsync(LoginDTO model)
-        { 
-            return await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false); 
+        {
+            return await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
         }
-        public async Task LogoutAsync() 
+
+        public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
@@ -45,8 +47,8 @@ namespace Orders.Backend.Repositories.Implementations
             var roleExists = await _roleManager.RoleExistsAsync(roleName);
             if (!roleExists)
             {
-                await _roleManager.CreateAsync(new IdentityRole 
-                { 
+                await _roleManager.CreateAsync(new IdentityRole
+                {
                     Name = roleName
                 });
             }

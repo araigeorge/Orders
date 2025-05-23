@@ -35,18 +35,18 @@ namespace Orders.Backend.Repositories.Implementations
                 .Include(c => c.States)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(pagination.Filter)) 
-            { 
-                queryable = queryable.Where(x => x.Name.ToLower().Contains(pagination.Filter.ToLower())); 
+            if (!string.IsNullOrWhiteSpace(pagination.Filter))
+            {
+                queryable = queryable.Where(x => x.Name.ToLower().Contains(pagination.Filter.ToLower()));
             }
 
-            return new ActionResponse<IEnumerable<Country>> 
+            return new ActionResponse<IEnumerable<Country>>
             {
-                WasSuccess = true, 
+                WasSuccess = true,
                 Result = await queryable
                 .OrderBy(x => x.Name)
                 .Paginate(pagination)
-                .ToListAsync() 
+                .ToListAsync()
             };
         }
 
@@ -54,16 +54,16 @@ namespace Orders.Backend.Repositories.Implementations
         {
             var queryable = _context.Countries.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(pagination.Filter)) 
-            { 
-                queryable = queryable.Where(x => x.Name.ToLower().Contains(pagination.Filter.ToLower())); 
+            if (!string.IsNullOrWhiteSpace(pagination.Filter))
+            {
+                queryable = queryable.Where(x => x.Name.ToLower().Contains(pagination.Filter.ToLower()));
             }
 
-            double count = await queryable.CountAsync(); 
-            int totalPages = (int)Math.Ceiling(count / pagination.RecordsNumber); 
-            return new ActionResponse<int> 
-            { 
-                WasSuccess = true, 
+            double count = await queryable.CountAsync();
+            int totalPages = (int)Math.Ceiling(count / pagination.RecordsNumber);
+            return new ActionResponse<int>
+            {
+                WasSuccess = true,
                 Result = totalPages
             };
         }
@@ -89,6 +89,13 @@ namespace Orders.Backend.Repositories.Implementations
                 WasSuccess = true,
                 Result = country
             };
+        }
+
+        public async Task<IEnumerable<Country>> GetComboAsync()
+        {
+            return await _context.Countries
+                .OrderBy(c => c.Name)
+                .ToListAsync();
         }
     }
 }

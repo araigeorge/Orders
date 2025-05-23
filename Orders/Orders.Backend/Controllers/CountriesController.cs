@@ -19,6 +19,13 @@ namespace Orders.Backend.Controllers
             _countriesUnitOfWork = countriesUnitOfWork;
         }
 
+        [AllowAnonymous]
+        [HttpGet("combo")]
+        public async Task<IActionResult> GetComboAsync()
+        {
+            return Ok(await _countriesUnitOfWork.GetComboAsync());
+        }
+
         [HttpGet("full")]
         public override async Task<IActionResult> GetAsync()
         {
@@ -33,10 +40,10 @@ namespace Orders.Backend.Controllers
         [HttpGet]
         public override async Task<IActionResult> GetAsync(PaginationDTO pagination)
         {
-            var response = await _countriesUnitOfWork.GetAsync(pagination); 
-            if (response.WasSuccess) 
-            { 
-                return Ok(response.Result); 
+            var response = await _countriesUnitOfWork.GetAsync(pagination);
+            if (response.WasSuccess)
+            {
+                return Ok(response.Result);
             }
             return BadRequest();
         }
@@ -51,16 +58,16 @@ namespace Orders.Backend.Controllers
             }
             return NotFound(response.Message);
         }
-        [HttpGet("totalPages")] 
-        public override async Task<IActionResult> GetPagesAsync([FromQuery] PaginationDTO pagination) 
-        { 
-            var action = await _countriesUnitOfWork.GetTotalPagesAsync(pagination); 
-            if (action.WasSuccess) 
+
+        [HttpGet("totalPages")]
+        public override async Task<IActionResult> GetPagesAsync([FromQuery] PaginationDTO pagination)
+        {
+            var action = await _countriesUnitOfWork.GetTotalPagesAsync(pagination);
+            if (action.WasSuccess)
             {
                 return Ok(action.Result);
-            } 
-            return BadRequest(); 
+            }
+            return BadRequest();
         }
-
     }
 }

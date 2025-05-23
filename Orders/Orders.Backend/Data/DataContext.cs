@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Orders.Shared.Entities;
-using System.Data.Common;
 
 namespace Orders.Backend.Data
 {
@@ -10,12 +8,13 @@ namespace Orders.Backend.Data
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
-                
         }
+
         public DbSet<Category> Categories { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<State> States { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -24,8 +23,8 @@ namespace Orders.Backend.Data
             modelBuilder.Entity<State>().HasIndex(x => new { x.CountryId, x.Name }).IsUnique();
             modelBuilder.Entity<City>().HasIndex(x => new { x.StateId, x.Name }).IsUnique();
             DisableCascadingDelete(modelBuilder);
-
         }
+
         private void DisableCascadingDelete(ModelBuilder modelBuilder)
         {
             var relationships = modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys());
@@ -34,7 +33,5 @@ namespace Orders.Backend.Data
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
         }
-
-
     }
 }
